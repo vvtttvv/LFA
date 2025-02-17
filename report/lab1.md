@@ -48,6 +48,7 @@ If we talk about implementation, I tried to add comments in my solution (*please
 - A construcor
 - A method to check if a string belongs to language
 
+I had some troubles with stringBelongToLanguage implementation. The logis of this function: I convert productions in a step-by-step object which stores data like an object in object. I can add final state if the string is in the end of the word and has terminal with F (a mark for final terminals). 
 
 ```js
 import { Grammar } from "./Grammar.js";
@@ -89,7 +90,32 @@ input.onchange = function(){
     newText.textContent = `This word ${result ? 'is in language' : "isn't in language"}`;
     resultShow.prepend(newText);
 }
+
+stringBelongToLanguage(inputString) {
+        let currentState = this.initialState;
+        for (let i = 0; i < inputString.length; i++) {
+            let char = inputString[i];
+            if (!this.alphabet.has(char)) return false; // An unknown word like "fgsfgdfs" or "Dfadfs", we should have only combinations of abc
+            let stateTransitions = this.transitions[currentState] || {}; // like {b: 'A', a: 'B'}
+            if (!(char in stateTransitions)) return false;// If we don't have needed char (e.g. {b: 'A', a: 'B'} we need to have 'a' or 'b')
+            if(stateTransitions[char].length!==1){
+                if(i===inputString.length-1){
+                    currentState = 'F';
+                } else{
+                    currentState = stateTransitions[char][1];
+                }
+            } else{
+                currentState = stateTransitions[char][0];
+            }
+            // console.log(currentState);
+            // console.log(stateTransitions);
+            // console.log(this.transitions);
+        }
+
+        return this.finalStates.has(currentState);
+    }
 ```
+
 ## Conclusions / Screenshots / Results
 In conclusion, this lab gave me nice opportunity to practice classes in js (I didn't work with them for long time). Also due to 1 lab I improved my knowledge about grammar and finite automaton and sustained my knowledge with practical tasks. 
 ![image](https://github.com/user-attachments/assets/b2c0978f-42e7-4c19-bbc9-d5a8838d05ae)
