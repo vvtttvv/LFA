@@ -16,7 +16,7 @@ class Grammar {
         }
         return arr;
     }
-
+    
 
     expandSymbol(symbol) {
         if (this.terminals.has(symbol))  return symbol;   //It means we already have terminal 
@@ -45,7 +45,7 @@ class Grammar {
                     [symbol, nextState] = [rule, 'F'];
                     transitions['F'][rule] = {};
                 }
-                // console.log(left + "  " + rule + "  " + symbol + "  " + nextState);
+                 console.log(left + "  " + rule + "  " + symbol + "  " + nextState);
                 if(transitions[left][symbol]){
                     transitions[left][symbol].push(nextState);
                 } else{

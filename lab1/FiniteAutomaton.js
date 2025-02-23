@@ -1,12 +1,11 @@
 class FiniteAutomaton {
     constructor(states, alphabet, transitions, initialState, finalStates) {
         this.states = new Set(states);
-        this.alphabet = new Set(alphabet);
+        this.alphabet = new Set(alphabet); 
         this.transitions = transitions;
         this.initialState = initialState;
         this.finalStates = finalStates;
     }
-
 
     stringBelongToLanguage(inputString) {
         let currentState = this.initialState;
@@ -19,7 +18,7 @@ class FiniteAutomaton {
                 if(i===inputString.length-1){
                     currentState = 'F';
                 } else{
-                    currentState = stateTransitions[char][0];
+                    currentState = stateTransitions[char][1];
                 }
             } else{
                 currentState = stateTransitions[char][0];

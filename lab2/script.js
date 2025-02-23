@@ -1,4 +1,8 @@
-import { Grammar } from "./Grammar.js";
+import { FiniteAutomaton } from "./FiniteAutomaton.js";
+import { Grammar } from "./Grammar.js"; 
+import drawAutomaton from "./draw.js";
+import NFAtoDFAConverter from "./Converter.js";
+import drawAutomaton2 from "./drawDFA.js";
 
 const nonTerminals = ["S", "A", "B", "C"];
 const terminals = ["a", "b", "c"];   // In my variant it is without 'c', but I suppose it is misspell
@@ -10,7 +14,7 @@ const productions = {
 };
 const startSymbol = "S";
 
-const grammar = new Grammar(nonTerminals, terminals, productions, startSymbol);
+const grammar = new Grammar(nonTerminals, terminals, productions, startSymbol, new Set(['F', '']));
 const finiteAutomaton = grammar.toFiniteAutomaton();
 
 const strings = grammar.generatateStrings();
@@ -37,3 +41,37 @@ input.onchange = function(){
     newText.textContent = `This word ${result ? 'is in language' : "isn't in language"}`;
     resultShow.prepend(newText);
 }
+
+
+input.placeholder = "Grammar : " + grammar.classifyGrammar();
+
+/*
+Variant 29
+Q = {q0,q1,q2},
+∑ = {a,b},
+F = {q2},
+δ(q0,a) = q1,
+δ(q0,a) = q0,
+δ(q1,b) = q1,
+δ(q1,a) = q2,
+δ(q2,b) = q2,
+δ(q2,a) = q0.
+*/
+
+let Q = ["A", "B", "C"];
+let sigma = ["a", "b"];
+let F = ["C"];
+let delta = {
+    "A": { "a": ["B", "A"] },
+    "B": { "b": ["B"], "a": ["C"] },
+    "C": { "b": ["C"], "a": ["A"] }
+};
+
+let ndfa = new FiniteAutomaton(Q, sigma, delta, "A", F);
+console.log(ndfa);
+let dfa = new NFAtoDFAConverter(ndfa);
+console.log(dfa);
+
+
+drawAutomaton(ndfa, "nfaCanvas");
+drawAutomaton2(dfa, "dfaCanvas");
