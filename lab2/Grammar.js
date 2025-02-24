@@ -37,21 +37,32 @@ class Grammar {
         for (let [left, rules] of Object.entries(this.productions)) {   // To get key(Non-terminal)/values(rules)
             for (let rule of rules) {
                 let symbol, nextState;
-                if(rule.length === 2){
+                
+                if (rule.length === 2) {
                     [symbol, nextState] = rule.split("");
-                } else{
+                } else {
                     [symbol, nextState] = [rule, 'F'];
                     transitions['F'][rule] = [];
                 }
-                // console.log(left + "  " + rule + "  " + symbol + "  " + nextState);
-                if(transitions[left][symbol]){
-                    transitions[left][symbol].push(nextState);
-                } else{
-                    transitions[left][symbol] = [nextState]; // Finally we create next structure: {A:{a:'B',b:['A','F']},B:{..},C:{..}...}
+                
+        
+                let leftStates = left.split("");
+        
+                if (leftStates.length > 1) {
+                    if (!transitions[leftStates[0]]) transitions[leftStates[0]] = {};
+                    if (!transitions[leftStates[0]][leftStates[1]]) transitions[leftStates[0]][leftStates[1]] = [];
+        
+                    transitions[leftStates[0]][leftStates[1]].push(nextState);
+                } else {
+                    if (transitions[left][symbol]) {
+                        transitions[left][symbol].push(nextState);
+                    } else {
+                        transitions[left][symbol] = [nextState];
+                    }
                 }
-                // console.log(transitions);
             }
         }
+        
         // console.log(transitions);
         return new FiniteAutomaton(q, sigma, transitions, this.startSymbol, this.finalStates);
     }

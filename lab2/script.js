@@ -8,7 +8,7 @@ const nonTerminals = ["S", "A", "B", "C"];
 const terminals = ["a", "b", "c"];   // In my variant it is without 'c', but I suppose it is misspell
 const productions = {
     "S": ["bA"],                         
-    "A": ["b", "aB", "bA"],     
+    "AB": ["b", "aB", "bA"],     
     "B": ["bC", "aB"],
     "C": ["cA"], 
 };

@@ -9,7 +9,6 @@ export default function drawAutomaton2(automaton, canvasId) {
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   
-    // Преобразуем массив состояний (каждый элемент – Set) в массив строк, например: Set{'B','A'} → "A,B"
     const stateNames = automaton.states.map(s => Array.from(s).sort().join(","));
     const numStates = stateNames.length;
   
@@ -58,7 +57,6 @@ export default function drawAutomaton2(automaton, canvasId) {
         ctx.fillStyle = "black";
     }
   
-    // Рисуем стрелки переходов
     for (let state of stateNames) {
         if (!automaton.transitions[state]) continue;
         for (let symbol of Object.keys(automaton.transitions[state])) {
@@ -79,12 +77,10 @@ export default function drawAutomaton2(automaton, canvasId) {
         }
     }
   
-    // Рисуем состояния
     for (let state of stateNames) {
         let { x, y } = positions[state]; 
         const r = 18;
   
-        // Проверяем, является ли состояние конечным
         const isFinal = automaton.finalStates.has(state);
         ctx.beginPath();
         ctx.arc(x, y, r, 0, 2 * Math.PI, false);
@@ -104,7 +100,6 @@ export default function drawAutomaton2(automaton, canvasId) {
         ctx.textBaseline = "middle";
         ctx.fillText(state, x, y);
   
-        // Отмечаем начальное состояние стрелкой
         if (state === automaton.initialState) { 
             ctx.beginPath();
             ctx.moveTo(x - 2*r - 20, y);
@@ -119,8 +114,8 @@ export default function drawAutomaton2(automaton, canvasId) {
     }
   
     function drawSelfLoop(cx, cy, label) {
-        const r = 18; // Радиус состояния
-        const loopOffset = 30; // Смещение для рисования петли
+        const r = 18; 
+        const loopOffset = 30;
     
         const startX = cx;
         const startY = cy - r;
