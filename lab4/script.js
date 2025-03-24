@@ -4,7 +4,7 @@ import drawAutomaton from "./draw.js";
 import NFAtoDFAConverter from "./Converter.js";
 import drawAutomaton2 from "./drawDFA.js";
 import Lexer from "./lexer.js";
-import lab4 from "./lab4.js";
+import {generatedStrings} from "./lab4.js";
 
 const nonTerminals = ["S", "A", "B", "C"];
 const terminals = ["a", "b", "c"];   // In my variant it is without 'c', but I suppose it is misspell
@@ -102,11 +102,11 @@ startTokenization.onclick = function() {
 
 
 
-// Lab 4
-lab4(10).map((string)=>{
+// Lab 4 
+generatedStrings.forEach((string) => {
     let newText = document.createElement('p');
     console.log("Worked");
-    newText.textContent = `Created string: ${string}`;   
+    newText.textContent = `Created string: ${string}`;
     const divElement = document.getElementById("lab4_library");
-    divElement.appendChild(newText); 
-})
+    divElement.appendChild(newText);
+});
