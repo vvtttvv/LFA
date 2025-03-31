@@ -47,246 +47,78 @@ The solution consists of a JavaScript class that converts a given context-free g
 ### **Code Implementation**
 
 ```js
-const EPSILON = "ε";
+const EPSILON = "ε"; // Represents epsilon production (empty production)
 
-export default class CNF {
+class CNF {
     constructor(nonTerminals, terminals, rules, start = 'S') {
-        this.nonTerminals = nonTerminals;
-        this.terminals = terminals;
-        this.rules = rules;
-        this.start = start;
+        this.nonTerminals = nonTerminals; // Non-terminal symbols (e.g., S, A, B)
+        this.terminals = terminals; // Terminal symbols (e.g., a, b, c)
+        this.rules = rules; // Grammar rules defining production relations
+        this.start = start; // Start symbol (usually S)
     }
-
-    printRules() {
-        for (const nonTerminal in this.rules) {
-            console.log(`${nonTerminal} -> ${this.rules[nonTerminal].join(' | ')}`);
-        }
-    }
-
-    isCNF() {
-        for (const nonTerminal in this.rules) {
-            for (const production of this.rules[nonTerminal]) {
-                if (production.length === 0 || production.length > 2) {
-                    return false;
-                }
-                if (production.length === 1 && !this.terminals.includes(production)) {
-                    return false;
-                }
-                if (production.length === 2 && production.split('').some(symbol => this.terminals.includes(symbol))) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-    
 
     eliminateEpsilonProductions() {
-        let nullable = new Set();
-    
-        for (const nonTerminal of this.nonTerminals) {
-            if (!this.rules[nonTerminal]) continue; 
-            for (const production of this.rules[nonTerminal]) {
-                if (production === EPSILON) {
-                    nullable.add(nonTerminal);
-                }
-            }
+        // Removes ε-productions (productions that derive an empty string ε)
+        let nullable = new Set(); // Set to track nullable non-terminals
+        for (const nt in this.rules) {
+            // Identify non-terminals that directly produce epsilon
+            if (this.rules[nt].includes(EPSILON)) nullable.add(nt);
         }
-    
-        let changes = true;
-        while (changes) {
-            changes = false;
-            for (const nonTerminal of this.nonTerminals) {
-                if (!this.rules[nonTerminal]) continue;
-                if (!nullable.has(nonTerminal)) {
-                    for (const production of this.rules[nonTerminal]) {
-                        if ([...production].every(symbol => nullable.has(symbol))) {
-                            nullable.add(nonTerminal);
-                            changes = true;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-    
-        let newRules = {};
-        for (const nonTerminal in this.rules) {
-            let newProds = [];
-            for (const production of this.rules[nonTerminal]) {
-                if (production !== EPSILON) {
-                    newProds.push(...this._expandNullableProd(production, nullable));
-                }
-            }
-            newRules[nonTerminal] = [...new Set(newProds)];
-        }
-        this.rules = newRules;
-    }
-    
 
-    _expandNullableProd(production, nullable) {
-        let expansions = [''];
-        for (const symbol of production) {
-            let newExpansions = [];
-            if (nullable.has(symbol)) {
-                for (const expansion of expansions) {
-                    newExpansions.push(expansion + symbol);
-                    newExpansions.push(expansion);
-                }
-            } else {
-                for (const expansion of expansions) {
-                    newExpansions.push(expansion + symbol);
-                }
-            }
-            expansions = newExpansions;
+        // Iteratively add non-terminals that can derive epsilon
+        let newRules = {};
+        for (const nt in this.rules) {
+            // For each production, create new alternatives by removing nullable symbols
+            newRules[nt] = this.rules[nt].flatMap(prod => 
+                prod !== EPSILON ? this._expandNullableProd(prod, nullable) : []
+            );
         }
-        return expansions.filter(exp => exp !== '');
+        this.rules = newRules; // Update grammar with new rules after removing epsilon-productions
     }
 
     eliminateRenaming() {
-        let changes = true;
-        while (changes) {
-            changes = false;
-            for (const nonTerminal of this.nonTerminals) {
-                if (!this.rules[nonTerminal]) continue; 
-                let unitProductions = this.rules[nonTerminal].filter(p => this.nonTerminals.includes(p));
-                for (const unit of unitProductions) {
-                    if (!this.rules[unit]) continue; 
-                    let newProductions = this.rules[unit];
-                    if (newProductions) {
-                        this.rules[nonTerminal].push(...newProductions); 
-                        this.rules[nonTerminal] = this.rules[nonTerminal].filter(p => p !== unit); 
-                        this.rules[nonTerminal] = [...new Set(this.rules[nonTerminal])];
-                        changes = true;
-                    }
-                }
+        // Eliminates unit productions (A -> B), where the right side is a single non-terminal
+        for (const nt in this.rules) {
+            // Identify unit productions
+            let unitProds = this.rules[nt].filter(p => this.nonTerminals.includes(p));
+            for (const unit of unitProds) {
+                // Replace unit productions with actual productions of the unit
+                this.rules[nt].push(...this.rules[unit]);
+                // Remove the original unit production
+                this.rules[nt] = this.rules[nt].filter(p => p !== unit);
             }
         }
-    }
-    
-
-    eliminateInaccessibleSymbols() {
-        let accessible = new Set([this.start]);
-        let changes = true;
-        while (changes) {
-            changes = false;
-            for (const nonTerminal of [...accessible]) {
-                if (!this.rules[nonTerminal]) continue;  
-                for (const production of this.rules[nonTerminal]) {
-                    for (const symbol of production) {
-                        if (this.nonTerminals.includes(symbol) && !accessible.has(symbol)) {
-                            accessible.add(symbol);
-                            changes = true;
-                        }
-                    }
-                }
-            }
-        }
-        this.nonTerminals = [...accessible];
-        this.rules = Object.fromEntries(Object.entries(this.rules).filter(([nt]) => accessible.has(nt)));
-    }
-    
-
-    eliminateNonProductiveSymbols() {
-        let productive = new Set([this.start]);
-        let changes = true;
-        while (changes) {
-            changes = false;
-            for (const nonTerminal of this.nonTerminals) { 
-                if (!this.rules[nonTerminal]) continue;
-                if (!productive.has(nonTerminal)) {
-                    for (const production of this.rules[nonTerminal]) { 
-                        if ([...production].every(symbol => this.terminals.includes(symbol) || productive.has(symbol))) {
-                            productive.add(nonTerminal);
-                            changes = true;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        this.nonTerminals = [...productive];
-        this.rules = Object.fromEntries(
-            Object.entries(this.rules).filter(([nt]) => productive.has(nt))
-        );
-    }
-    
-
-    _createNewNonTerminal() {
-        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        for (const letter of alphabet) {
-            if (!this.nonTerminals.includes(letter)) {
-                this.nonTerminals.push(letter);
-                return letter;
-            }
-        }
-        throw new Error("No available non-terminal symbols.");
     }
 
     getCNFform() {
-        let newRules = {};
-        let terminalMap = {};
-        
-        for (const nonTerminal in this.rules) {
-            newRules[nonTerminal] = [];
-            for (const production of this.rules[nonTerminal]) {
-                let newProduction = [];
-                
-                for (const symbol of production) {
-                    if (this.terminals.includes(symbol)) {
-                        if (!(symbol in terminalMap)) {
-                            const newNonTerminal = this._createNewNonTerminal();
-                            terminalMap[symbol] = newNonTerminal;
-                            this.nonTerminals.push(newNonTerminal);
-                            newRules[newNonTerminal] = [symbol];
-                        }
-                        newProduction.push(terminalMap[symbol]);
-                    } else {
-                        newProduction.push(symbol);
-                    }
+        // Converts all productions to fit the CNF format (A -> BC or A -> a)
+        let newRules = {}, terminalMap = {}; // Stores new rules and mappings for terminal non-terminals
+        for (const nt in this.rules) {
+            newRules[nt] = [];
+            for (const prod of this.rules[nt]) {
+                let newProd = prod.split('').map(s => 
+                    this.terminals.includes(s) ? this._mapTerminal(s, terminalMap, newRules) : s
+                );
+                // If production has more than 2 symbols, break it down into smaller productions
+                while (newProd.length > 2) {
+                    const newNT = this._createNewNonTerminal(); // Create a new non-terminal to break down production
+                    newRules[newNT] = [newProd.shift() + newProd.shift()]; // Create a new production for the broken parts
+                    newProd.unshift(newNT); // Add new non-terminal back into the production
                 }
-                
-                while (newProduction.length > 2) {
-                    const first = newProduction.shift();
-                    const second = newProduction.shift();
-                    const newNonTerminal = this._createNewNonTerminal();
-                    this.nonTerminals.push(newNonTerminal);
-                    newRules[newNonTerminal] = [first + second];
-                    newProduction.unshift(newNonTerminal);
-                }
-                
-                newRules[nonTerminal].push(newProduction.join(''));
+                newRules[nt].push(newProd.join('')); // Add the final production
             }
         }
-        
-        this.rules = newRules;
+        this.rules = newRules; // Update the grammar with the CNF-compatible rules
     }
 
-
-    toCNF(printSteps = true) {
-        if (this.isCNF()) return;
-
-        this.eliminateEpsilonProductions();
-        if (printSteps) console.log("After eliminating epsilon productions:");
-        this.printRules();
-
-        this.eliminateRenaming();
-        if (printSteps) console.log("After eliminating renaming productions:");
-        this.printRules();
-
-        this.eliminateInaccessibleSymbols();
-        if (printSteps) console.log("After eliminating inaccessible symbols:");
-        this.printRules();
-
-        this.eliminateNonProductiveSymbols();
-        if (printSteps) console.log("After eliminating non-productive symbols:");
-        this.printRules();
-
-        this.getCNFform();
-        if (printSteps) console.log("After eliminating symbols != `Vt` or `VnVn`:");
-        this.printRules();
+    toCNF() {
+        // Main function to convert the grammar to CNF
+        this.eliminateEpsilonProductions(); // Step 1: Eliminate epsilon productions
+        this.eliminateRenaming(); // Step 2: Eliminate unit productions
+        this.getCNFform(); // Step 3: Convert all productions to CNF form
     }
 }
+
 
 ```
 
