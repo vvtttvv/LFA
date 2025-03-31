@@ -4,7 +4,8 @@ import drawAutomaton from "./draw.js";
 import NFAtoDFAConverter from "./Converter.js";
 import drawAutomaton2 from "./drawDFA.js";
 import Lexer from "./lexer.js";
-import {generatedStrings} from "./lab4.js"; 
+import {generatedStrings} from "./lab4.js";
+import CNF from "./CNF.js";
 
 const nonTerminals = ["S", "A", "B", "C"];
 const terminals = ["a", "b", "c"];   // In my variant it is without 'c', but I suppose it is misspell
@@ -109,3 +110,20 @@ generatedStrings.forEach((string) => {
 
 
 //Lab 5
+console.log("=== Lab 5: Приведение грамматики к нормальной форме Хомского (CNF) ===");
+
+const nonTerminals2 = ["S", "A", "B", "C", "D"];
+const terminals2 = ["a", "b"]; 
+const productions2 = {
+    "S": ["aB", "bA", "A"],
+    "A": ["B", "AS", "bBAB", "b"],
+    "B": ["b", "bS", "aD", "ε"],
+    "D": ["AA"],
+    "C": ["Ba"],
+};
+const startSymbol2 = "S";
+ 
+const cnfGrammar = new CNF(nonTerminals2, terminals2, productions2, startSymbol2, new Set(['F', '']));
+  
+cnfGrammar.toCNF(true);
+ 
