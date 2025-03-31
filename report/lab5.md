@@ -48,7 +48,6 @@ The solution consists of a JavaScript class that converts a given context-free g
 
 ```js
 const EPSILON = "ε";
-const EPSILON = "ε";
 
 export default class CNF {
     constructor(nonTerminals, terminals, rules, start = 'S') {
